@@ -1,7 +1,6 @@
 
-/*! JFS - v1.4.0 - 2018/07/20 */
-// RELEASE NOTES: Remove custom tab processing for better form accessibilty.
-// BREAKING CHANGE: JFS.Ready, JFS.Changed, and JFS.TextKeyUp Removed in favor of pack-based functions.
+/*! JFS - v1.4.1 - 2018/11/15 */
+// RELEASE NOTES: Also add "jfs_has_focus" class to parent label of radio and checkboxes.
 (function(window,undefined) {
     "use strict";
     
@@ -415,8 +414,14 @@
         // FOCUS PAIR CLASS
         pack.Form.on('focus', textFieldsSelector + ', select.' + CLS.Field + '_select, button.' + CLS.Field + '_button', function() { jQuery(this).parent().parent().parent().addClass(CLS.HasFocus); });
         pack.Form.on('blur', textFieldsSelector + ', select.' + CLS.Field + '_select, button.' + CLS.Field + '_button', function() { jQuery(this).parent().parent().parent().removeClass(CLS.HasFocus); });
-        pack.Form.on('focus', 'input.' + CLS.Field + '_input[type=radio], input.' + CLS.Field + '_input[type=checkbox]', function() { jQuery(this).parent().parent().parent().parent().addClass(CLS.HasFocus); });
-        pack.Form.on('blur', 'input.' + CLS.Field + '_input[type=radio], input.' + CLS.Field + '_input[type=checkbox]', function() { jQuery(this).parent().parent().parent().parent().removeClass(CLS.HasFocus); });
+        pack.Form.on('focus', 'input.' + CLS.Field + '_input[type=radio], input.' + CLS.Field + '_input[type=checkbox]', function() {
+            jQuery(this).parent().addClass(CLS.HasFocus); // ADD FOCUS CLASS TO LABEL
+            jQuery(this).parent().parent().parent().parent().addClass(CLS.HasFocus); // ADD FOCUS CLASS TO FIELD CONTAINER
+        });
+        pack.Form.on('blur', 'input.' + CLS.Field + '_input[type=radio], input.' + CLS.Field + '_input[type=checkbox]', function() {
+            jQuery(this).parent().removeClass(CLS.HasFocus); // REMOVE FOCUS CLASS FROM LABEL
+            jQuery(this).parent().parent().parent().parent().removeClass(CLS.HasFocus); // REMOVE FOCUS CLASS FROM FIELD CONTAINER
+        });
         
         // ONFOCUS LISTENERS
         pack.Form.on('focus', textFieldsSelector + ', ' + selectionFieldsSelector, function(event) {
