@@ -1,6 +1,6 @@
 
-/*! JFS - v1.4.1 - 2018/11/15 */
-// RELEASE NOTES: Also add "jfs_has_focus" class to parent label of radio and checkboxes.
+/*! JFS - v1.4.2 - 2020/03/10 */
+// RELEASE NOTES: Add tabindex="0" to all inputs for better accessability. Also add tabindex flag and change "ResetPageTabIndexes" default to false. Misc Lint cleanup.
 (function(window,undefined) {
     "use strict";
     
@@ -31,7 +31,8 @@
             RepeatableGroupIcons: {},
             Interface: INTERFACE_TYPES[0],
             ExcludeFormTags: false,
-            ResetPageTabIndexes: true,
+            AddZeroedTabIndexes: true,
+            ResetPageTabIndexes: false,
             CustomFields: {},
             CustomContainers: {},
             CustomInputOptions: {},
@@ -308,7 +309,7 @@
     function BuildAndDisplayForm(pack) {
         
         // DISPLAY FIELDS
-        for (var i = 0; i < INTERFACE_TYPES.length; i++) { pack.Container.removeClass(CLS.Interface_Prefix + INTERFACE_TYPES[i]); }
+        for (var t = 0; t < INTERFACE_TYPES.length; t++) { pack.Container.removeClass(CLS.Interface_Prefix + INTERFACE_TYPES[t]); }
         pack.Container.addClass(CLS.Container).addClass(CLS.Interface_Prefix + pack.Interface).empty().html(GetFormHtml(pack));
         
         // SAVE JQUERY FORM OBJECT TO pack
@@ -444,7 +445,8 @@
             var formKey = btn.data(ATTR.DATA_FormKeys).join(SEP.Key);
             var values = GetCurrentFormValues(pack);
             var param = btn.data(ATTR.DATA_BtnFunctParam);
-            try { pack.Functions[functionName](values.Values, values.Unfilled, pack, formKey, param); } catch(e){};
+            try { pack.Functions[functionName](values.Values, values.Unfilled, pack, formKey, param); }
+            catch (e) { if (window.console) { console.log("JFS Error: Unable to run function: " + functionName, e); } }
         });
         
         // REPEATABLE GROUP BUTTONS
@@ -478,18 +480,18 @@
             // DATE/TIME FIELDS
             if (typeof jQuery.ui !== 'undefined') {
                 if (domField.hasClass(CLS.Date)) {
-                    var settings = domField.data(ATTR.DATA_DTPicker);
-                    if (("JfsNoWeekends" in settings) && (settings.JfsNoWeekends)) { settings.beforeShowDay = jQuery.datepicker.noWeekends; }
-                    settings.onClose = function() { CheckForFieldValueChanged(domField, GetDomFieldPackage(domField, pack), pack, "user"); };
-                    domField.datepicker(settings);
+                    var dpSettings = domField.data(ATTR.DATA_DTPicker);
+                    if (("JfsNoWeekends" in dpSettings) && (dpSettings.JfsNoWeekends)) { dpSettings.beforeShowDay = jQuery.datepicker.noWeekends; }
+                    dpSettings.onClose = function() { CheckForFieldValueChanged(domField, GetDomFieldPackage(domField, pack), pack, "user"); };
+                    domField.datepicker(dpSettings);
                 
                 } else if ((domField.hasClass(CLS.DateTime)) || (domField.hasClass(CLS.DateTimeLocal))) {
-                    var settings = domField.data(ATTR.DATA_DTPicker);
-                    if (("JfsNoWeekends" in settings) && (settings.JfsNoWeekends)) { settings.beforeShowDay = jQuery.datepicker.noWeekends; }
-                    settings.addSliderAccess = true;
-                    settings.sliderAccessArgs = { touchonly: false };
-                    settings.onClose = function() { CheckForFieldValueChanged(domField, GetDomFieldPackage(domField, pack), pack, "user"); };
-                    domField.datetimepicker(settings);
+                    var dtpSettings = domField.data(ATTR.DATA_DTPicker);
+                    if (("JfsNoWeekends" in dtpSettings) && (dtpSettings.JfsNoWeekends)) { dtpSettings.beforeShowDay = jQuery.datepicker.noWeekends; }
+                    dtpSettings.addSliderAccess = true;
+                    dtpSettings.sliderAccessArgs = { touchonly: false };
+                    dtpSettings.onClose = function() { CheckForFieldValueChanged(domField, GetDomFieldPackage(domField, pack), pack, "user"); };
+                    domField.datetimepicker(dtpSettings);
                 }
             }
         });
@@ -737,22 +739,22 @@
                         case "checkboxvaluecontains": if (domValue.split(SEP.Checkbox_Value).indexOf(param) !== -1) { det = true; } break;
                         case "checkboxvaluedoesnotcontain": if (domValue.split(SEP.Checkbox_Value).indexOf(param) === -1) { det = true; } break;
                         case "checkboxvaluesumis":
-                            var vals = domValue.split(SEP.Checkbox_Value);
+                            var sumVals = domValue.split(SEP.Checkbox_Value);
                             var sum = 0;
-                            for (var v = 0; v < vals.length; v++) { sum += (!isNaN(parseInt(vals[v], 10)) ? parseInt(vals[v], 10) : 0); }
+                            for (var s = 0; s < sumVals.length; s++) { sum += (!isNaN(parseInt(sumVals[s], 10)) ? parseInt(sumVals[s], 10) : 0); }
                             if (sum === parseInt(param, 10)) { det = true; }
                             break;
                         case "checkboxvaluesumgreaterthan":
-                            var vals = domValue.split(SEP.Checkbox_Value);
-                            var sum = 0;
-                            for (var v = 0; v < vals.length; v++) { sum += (!isNaN(parseInt(vals[v], 10)) ? parseInt(vals[v], 10) : 0); }
-                            if (sum > parseInt(param, 10)) { det = true; }
+                            var gtVals = domValue.split(SEP.Checkbox_Value);
+                            var gtSum = 0;
+                            for (var g = 0; g < gtVals.length; g++) { gtSum += (!isNaN(parseInt(gtVals[g], 10)) ? parseInt(gtVals[g], 10) : 0); }
+                            if (gtSum > parseInt(param, 10)) { det = true; }
                             break;
                         case "checkboxvaluesumlessthan":
-                            var vals = domValue.split(SEP.Checkbox_Value);
-                            var sum = 0;
-                            for (var v = 0; v < vals.length; v++) { sum += (!isNaN(parseInt(vals[v], 10)) ? parseInt(vals[v], 10) : 0); }
-                            if (sum < parseInt(param, 10)) { det = true; }
+                            var ltVals = domValue.split(SEP.Checkbox_Value);
+                            var ltSum = 0;
+                            for (var l = 0; l < ltVals.length; l++) { ltSum += (!isNaN(parseInt(ltVals[l], 10)) ? parseInt(ltVals[l], 10) : 0); }
+                            if (ltSum < parseInt(param, 10)) { det = true; }
                             break;
                         default:
                     }
@@ -800,7 +802,8 @@
                 try {
                     var vals = GetCurrentFormValues(pack);
                     pack.Functions[target](vals.Values, vals.Unfilled, pack, param);
-                } catch(e){};
+
+                } catch (e) { if (window.console) { console.log("JFS Error: Unable to run function.", target, e); } }
             
             // EVERYTHING ELSE
             } else {
@@ -817,23 +820,23 @@
                     
                     switch(action) {
                         case "disablefield":
-                            var lastKey = keys[keys.length - 1];
-                            var itemInd = parseInt(lastKey);
-                            var isSingleItem = !isNaN(itemInd);
+                            var disLastKey = keys[keys.length - 1];
+                            var disItemInd = parseInt(disLastKey);
+                            var disIsSingleItem = !isNaN(disItemInd);
                                     
-                            var fieldType = domField.attr('type');
-                            if ((fieldType === "select") && (!domField.hasClass(CLS.KeyPrefix + lastKey))) {
-                                var options = domField.find('option');
-                                if (options.length > itemInd) {
-                                    options.eq(itemInd).prop('disabled', true);
-                                    fcField[KEY.options][itemInd][KEY.disabled] = "true";
+                            var disFieldType = domField.attr('type');
+                            if ((disFieldType === "select") && (!domField.hasClass(CLS.KeyPrefix + disLastKey))) {
+                                var disOptions = domField.find('option');
+                                if (disOptions.length > disItemInd) {
+                                    disOptions.eq(disItemInd).prop('disabled', true);
+                                    fcField[KEY.options][disItemInd][KEY.disabled] = "true";
                                     domField.trigger('actionchange');
                                 }
                             } else {
                                 domField.prop('disabled', true);
-                                if ((fieldType === "radio") || (fieldType === "checkbox")) {
-                                    for (var o = 0; o < fcField[KEY.options].length; o++) {
-                                        if (!isSingleItem || (isSingleItem && (o === itemInd))) { fcField[KEY.options][o][KEY.disabled] = "true"; }
+                                if ((disFieldType === "radio") || (disFieldType === "checkbox")) {
+                                    for (var d = 0; d < fcField[KEY.options].length; d++) {
+                                        if (!disIsSingleItem || (disIsSingleItem && (d === disItemInd))) { fcField[KEY.options][d][KEY.disabled] = "true"; }
                                     }
                                     
                                 } else { fcField[KEY.disabled] = "true"; }
@@ -842,23 +845,23 @@
                             break;
                             
                         case "enablefield":
-                            var lastKey = keys[keys.length - 1];
-                            var itemInd = parseInt(lastKey);
-                            var isSingleItem = !isNaN(itemInd);
+                            var enLastKey = keys[keys.length - 1];
+                            var enItemInd = parseInt(enLastKey);
+                            var enIsSingleItem = !isNaN(enItemInd);
                             
-                            var fieldType = domField.attr('type');
-                            if ((fieldType === "select") && (!domField.hasClass(CLS.KeyPrefix + lastKey))) {
-                                var options = domField.find('option');
-                                if (options.length > itemInd) {
-                                    options.eq(itemInd).prop('disabled', false);
-                                    fcField[KEY.options][itemInd][KEY.disabled] = "false";
+                            var enFieldType = domField.attr('type');
+                            if ((enFieldType === "select") && (!domField.hasClass(CLS.KeyPrefix + enLastKey))) {
+                                var enOptions = domField.find('option');
+                                if (enOptions.length > enItemInd) {
+                                    enOptions.eq(enItemInd).prop('disabled', false);
+                                    fcField[KEY.options][enItemInd][KEY.disabled] = "false";
                                     domField.trigger('actionchange');
                                 }
                             } else {
                                 domField.prop('disabled', false);
-                                if ((fieldType === "radio") || (fieldType === "checkbox")) {
-                                    for (var o = 0; o < fcField[KEY.options].length; o++) {
-                                        if (!isSingleItem || (isSingleItem && (o === itemInd))) { fcField[KEY.options][o][KEY.disabled] = "false"; }
+                                if ((enFieldType === "radio") || (enFieldType === "checkbox")) {
+                                    for (var e = 0; e < fcField[KEY.options].length; e++) {
+                                        if (!enIsSingleItem || (enIsSingleItem && (e === enItemInd))) { fcField[KEY.options][e][KEY.disabled] = "false"; }
                                     }
                                     
                                 } else { fcField[KEY.disabled] = "false"; }
@@ -911,10 +914,10 @@
                             
                             // CHECKBOXES AND RADIOS
                             } else if ((fcField[KEY.type] === "radio") || (fcField[KEY.type] === "checkbox")) {
-                                var allValues = param.split(SEP.Checkbox_Value);
+                                var setAllValues = param.split(SEP.Checkbox_Value);
                                 domField.each(function() {
                                     var el = jQuery(this);
-                                    if (allValues.indexOf(el.attr('value')) !== -1) { el.prop('checked', true); }
+                                    if (setAllValues.indexOf(el.attr('value')) !== -1) { el.prop('checked', true); }
                                     else { el.prop('checked', false); }
                                     el.trigger('actionchange');
                                 });
@@ -941,10 +944,10 @@
                             
                             // CHECKBOXES AND RADIOS
                             } else if ((fcField[KEY.type] === "radio") || (fcField[KEY.type] === "checkbox")) {
-                                var allValues = copyFieldValue.split(SEP.Checkbox_Value);
+                                var copyAllValues = copyFieldValue.split(SEP.Checkbox_Value);
                                 domField.each(function() {
                                     var el = jQuery(this);
-                                    if (allValues.indexOf(el.attr('value')) !== -1) { el.prop('checked', true); }
+                                    if (copyAllValues.indexOf(el.attr('value')) !== -1) { el.prop('checked', true); }
                                     else { el.prop('checked', false); }
                                     el.trigger('actionchange');
                                 });
@@ -984,19 +987,21 @@
                             try {
                                 if (param in pack.CustomInputOptions) { newOptions = pack.CustomInputOptions[param](GetCurrentFormValues(pack).Values, pack); }
                                 else if (param in pack.PreDefindedOptionsDict) { newOptions = pack.PreDefindedOptionsDict[param]; }
-                            } catch(e){};
+
+                            } catch (e) { if (window.console) { console.log("JFS Error: Unable to parse custom input options: ", pack.CustomInputOptions, e); } }
+
                             fcField[KEY.options] = CloneObject(newOptions);
                             domField.html(GetSelectOptionsHtml(newOptions, "")).trigger('actionchange');
                             break;
                             
                         case "removeselectoption":
-                            var lastKey = keys[keys.length - 1];
-                            var fieldType = domField.attr('type');
-                            if ((fieldType === "select") && (!domField.hasClass(CLS.KeyPrefix + lastKey))) {
-                                var selectInd = parseInt(lastKey);
-                                var options = domField.children('option');
-                                if (options.length > selectInd) {
-                                    options.eq(selectInd).remove();
+                            var remLastKey = keys[keys.length - 1];
+                            var remFieldType = domField.attr('type');
+                            if ((remFieldType === "select") && (!domField.hasClass(CLS.KeyPrefix + remLastKey))) {
+                                var selectInd = parseInt(remLastKey);
+                                var remOptions = domField.children('option');
+                                if (remOptions.length > selectInd) {
+                                    remOptions.eq(selectInd).remove();
                                     delete fcField[KEY.options][selectInd];
                                     domField.trigger('actionchange');
                                 }
@@ -1118,7 +1123,8 @@
                 try {
                     var countDict = GetParamsDict(modsDict[MOD.Count][KEY.params]);
                     if (MOD.Max in countDict) { maxCount = parseInt(countDict[MOD.Max]); }
-                } catch(e){};
+
+                } catch (e) { if (window.console) { console.log("JFS Error: Error parsing repeatable group min count modifier", keys, e); } }
             }
         }
         
@@ -1200,7 +1206,8 @@
                         try {
                             var countDict = GetParamsDict(modsDict[MOD.Count][KEY.params]);
                             if (MOD.Min in countDict) { minCount = parseInt(countDict[MOD.Min]); }
-                        } catch(e){};
+
+                        } catch (e) { if (window.console) { console.log("JFS Error: Error parsing repeatable group min count modifier", keys, e); } }
                     }
                 }
                 
@@ -1353,13 +1360,13 @@
     function GetFieldObject(keys, sets, returnGroup) {
         var set = sets[0];
         if (sets.length > 1) {
-            for (var i = 0; i < sets.length; i++) { if (sets[i][KEY.key] === keys[0]) { set = sets[i]; } }
+            for (var s = 0; s < sets.length; s++) { if (sets[s][KEY.key] === keys[0]) { set = sets[s]; } }
         }
         
         var fields = set[KEY.fields];
         var obj = fields[0];
         if (fields.length > 1) {
-            for (var i = 0; i < fields.length; i++) { if (fields[i][KEY.key] === keys[1]) { obj = fields[i]; } }
+            for (var f = 0; f < fields.length; f++) { if (fields[f][KEY.key] === keys[1]) { obj = fields[f]; } }
         }
         
         if (KEY.field_sets in obj) {
@@ -1377,13 +1384,13 @@
     function KeySetIsRepGrp(keys, sets) {
         var set = sets[0];
         if (sets.length > 1) {
-            for (var i = 0; i < sets.length; i++) { if (sets[i][KEY.key] === keys[0]) { set = sets[i]; } }
+            for (var s = 0; s < sets.length; s++) { if (sets[s][KEY.key] === keys[0]) { set = sets[s]; } }
         }
         
         var fields = set[KEY.fields];
         var obj = fields[0];
         if (fields.length > 1) {
-            for (var i = 0; i < fields.length; i++) { if (fields[i][KEY.key] === keys[1]) { obj = fields[i]; } }
+            for (var f = 0; f < fields.length; f++) { if (fields[f][KEY.key] === keys[1]) { obj = fields[f]; } }
         }
         
         if (keys.length <= 3) { return (obj[KEY.type] === "repeatablegroup"); }
@@ -1562,12 +1569,12 @@
                     
                     // addclass AND adddataattributes MODS ARE SUPPORTED FOR FORM TAG
                     if (KEY.mods in pack.FieldsInit) {
-                        var mods = GetModsDict(pack.FieldsInit[KEY.mods]);
-                        if ((MOD.AddClass in mods) && (KEY.param in mods[MOD.AddClass]) && (mods[MOD.AddClass][KEY.param] !== "")) {
-                            var adds = (mods[MOD.AddClass][KEY.param]).split(' ');
-                            for (var c = 0; c < adds.length; c++) { classes.push(adds[c]); }
+                        var formMods = GetModsDict(pack.FieldsInit[KEY.mods]);
+                        if ((MOD.AddClass in formMods) && (KEY.param in formMods[MOD.AddClass]) && (formMods[MOD.AddClass][KEY.param] !== "")) {
+                            var formAdds = (formMods[MOD.AddClass][KEY.param]).split(' ');
+                            for (var f = 0; f < formAdds.length; f++) { classes.push(formAdds[f]); }
                         }
-                        if ((MOD.AddDataAttrs in mods) && (KEY.params in mods[MOD.AddDataAttrs])) { attrs = GetDataAttributsFromParams(mods[MOD.AddDataAttrs][KEY.params]); }
+                        if ((MOD.AddDataAttrs in formMods) && (KEY.params in formMods[MOD.AddDataAttrs])) { attrs = GetDataAttributsFromParams(formMods[MOD.AddDataAttrs][KEY.params]); }
                     }
                     
                     attrs.push(GetAttr('class', classes.join(' ')));
@@ -1593,10 +1600,10 @@
                     
                     // ADD CLASS MOD IS SUPPORTED FOR SET CONTAINERS
                     if (KEY.mods in target) {
-                        var mods = GetModsDict(target[KEY.mods]);
-                        if ((MOD.AddClass in mods) && (KEY.param in mods[MOD.AddClass]) && (mods[MOD.AddClass][KEY.param] !== "")) {
-                            var adds = (mods[MOD.AddClass][KEY.param]).split(' ');
-                            for (var c = 0; c < adds.length; c++) { classes.push(adds[c]); }
+                        var setMods = GetModsDict(target[KEY.mods]);
+                        if ((MOD.AddClass in setMods) && (KEY.param in setMods[MOD.AddClass]) && (setMods[MOD.AddClass][KEY.param] !== "")) {
+                            var setAdds = (setMods[MOD.AddClass][KEY.param]).split(' ');
+                            for (var s = 0; s < setAdds.length; s++) { classes.push(setAdds[s]); }
                         }
                     }
                     
@@ -1630,15 +1637,15 @@
                     var inFieldset = ((target[KEY.type] === "radio") || (target[KEY.type] === "checkbox"));
                     
                     // MODS
-                    var mods = GetModsDict((KEY.mods in target ? target[KEY.mods] : []));
-                    var augHtml = GetAugmentHtml(mods);
+                    var pairMods = GetModsDict((KEY.mods in target ? target[KEY.mods] : []));
+                    var pairAugHtml = GetAugmentHtml(pairMods);
                     
                     var pairHtml = "<div " + attrs.join(' ') + ">";
-                    if (augHtml.above !== "") { pairHtml += "<div class='" + CLS.AugmentHtml + " " + CLS.AugmentHtmlAbove + "'>" + augHtml.above + "</div>"; }
+                    if (pairAugHtml.above !== "") { pairHtml += "<div class='" + CLS.AugmentHtml + " " + CLS.AugmentHtmlAbove + "'>" + pairAugHtml.above + "</div>"; }
                     if (inFieldset) { pairHtml += "<fieldset " + fieldsetAttrs.join(' ') + ">"; }
                     pairHtml += html;
                     if (inFieldset) { pairHtml += "</fieldset>"; }
-                    if (augHtml.below !== "") { pairHtml += "<div class='" + CLS.AugmentHtml + " " + CLS.AugmentHtmlBelow + "'>" + augHtml.below + "</div>"; }
+                    if (pairAugHtml.below !== "") { pairHtml += "<div class='" + CLS.AugmentHtml + " " + CLS.AugmentHtmlBelow + "'>" + pairAugHtml.below + "</div>"; }
                     pairHtml += "</div>";
                     
                     html = pairHtml;
@@ -1662,13 +1669,13 @@
                     attrs.push(GetAttr('class', classes.join(' ')));
                     
                     // MODS
-                    var mods = GetModsDict((KEY.mods in target ? target[KEY.mods] : []));
-                    var augHtml = GetAugmentHtml(mods);
+                    var labelMods = GetModsDict((KEY.mods in target ? target[KEY.mods] : []));
+                    var labelAugHtml = GetAugmentHtml(labelMods);
                     
                     var labelHtml = "<div " + attrs.join(' ') + ">";
-                    if (augHtml.label_above !== "") { labelHtml += "<div class='" + CLS.AugmentHtml + " " + CLS.AugmentHtmlLabelAbove + "'>" + augHtml.label_above + "</div>"; }
+                    if (labelAugHtml.label_above !== "") { labelHtml += "<div class='" + CLS.AugmentHtml + " " + CLS.AugmentHtmlLabelAbove + "'>" + labelAugHtml.label_above + "</div>"; }
                     labelHtml += html;
-                    if (augHtml.label_below !== "") { labelHtml += "<div class='" + CLS.AugmentHtml + " " + CLS.AugmentHtmlLabelBelow + "'>" + augHtml.label_below + "</div>"; }
+                    if (labelAugHtml.label_below !== "") { labelHtml += "<div class='" + CLS.AugmentHtml + " " + CLS.AugmentHtmlLabelBelow + "'>" + labelAugHtml.label_below + "</div>"; }
                     labelHtml += "</div>";
                     
                     html = labelHtml;
@@ -1679,13 +1686,13 @@
                     attrs.push(GetAttr('class', classes.join(' ')));
                     
                     // MODS
-                    var mods = GetModsDict((KEY.mods in target ? target[KEY.mods] : []));
-                    var augHtml = GetAugmentHtml(mods);
+                    var fieldMods = GetModsDict((KEY.mods in target ? target[KEY.mods] : []));
+                    var fieldAugHtml = GetAugmentHtml(fieldMods);
                     
                     var fieldHtml = "<div " + attrs.join(' ') + ">";
-                    if (augHtml.field_above !== "") { fieldHtml += "<div class='" + CLS.AugmentHtml + " " + CLS.AugmentHtmlFieldAbove + "'>" + augHtml.field_above + "</div>"; }
+                    if (fieldAugHtml.field_above !== "") { fieldHtml += "<div class='" + CLS.AugmentHtml + " " + CLS.AugmentHtmlFieldAbove + "'>" + fieldAugHtml.field_above + "</div>"; }
                     fieldHtml += html;
-                    if (augHtml.field_below !== "") { fieldHtml += "<div class='" + CLS.AugmentHtml + " " + CLS.AugmentHtmlFieldBelow + "'>" + augHtml.field_below + "</div>"; }
+                    if (fieldAugHtml.field_below !== "") { fieldHtml += "<div class='" + CLS.AugmentHtml + " " + CLS.AugmentHtmlFieldBelow + "'>" + fieldAugHtml.field_below + "</div>"; }
                     fieldHtml += "</div>";
                     
                     html = fieldHtml;
@@ -1845,12 +1852,16 @@
                         infoBubHtml += "<span>" + paramsDict.html + "</span>";
                         infoBubHtml += "</span>";
                     }
-                } catch(e){};
+
+                } catch (e) { if (window.console) { console.log("JFS Error: Error parsing info bubble modifier.", formKeys, e); } }
             }
         
             // SUFFIX
             var suffix = pack.LabelSuffix;
-            if (MOD.LabelSuffix in modsDict) { try { suffix = modsDict[MOD.LabelSuffix][KEY.param]; } catch(e){}; }
+            if (MOD.LabelSuffix in modsDict) {
+                try { suffix = modsDict[MOD.LabelSuffix][KEY.param]; }
+                catch (e) { if (window.console) { console.log("JFS Error: Error parsing label suffix modifier.", formKeys, e); } }
+            }
         
             // CONTENTS (NEEDS TO SUPPORT PHRASING CONTENT)
             var labelHtml = field[KEY.label] + suffix;
@@ -1860,7 +1871,11 @@
             if (requiredString !== "") {
                 classes.push(CLS.Req);
                 var prepend = pack.LabelRequiredPrepend;
-                if (MOD.ReqPrepend in modsDict) { try { prepend = (modsDict[MOD.ReqPrepend][KEY.param] === "true"); } catch(e){}; }
+                if (MOD.ReqPrepend in modsDict) {
+                    try { prepend = (modsDict[MOD.ReqPrepend][KEY.param] === "true"); }
+                    catch (e) { if (window.console) { console.log("JFS Error: Error parsing lable required prepend modifier.", formKeys, e); } }
+                }
+
                 if (prepend) {
                     labelHtml = requiredString + labelHtml;
                     labelText = requiredString + labelText;
@@ -1992,7 +2007,7 @@
                         }
                     }
                 
-                } catch(e){};
+                } catch (e) { if (window.console) { console.log("JFS Error: Error parsing repeatable group buttons.", target, e); } }
             }
         }
         
@@ -2024,7 +2039,7 @@
         
         // FIELD HTML
         var btnsHtml = GetBtnsHtml(formKeys, modsDict, true, pack);
-        dict.Html += btnsHtml.above + btnsHtml.left + btnsHtml.right + GetFieldHtml("input", dict.FieldClassList, dict.FieldAttrs, dict.WidthFill) + btnsHtml.below;
+        dict.Html += btnsHtml.above + btnsHtml.left + btnsHtml.right + GetFieldHtml("input", pack, dict.FieldClassList, dict.FieldAttrs, dict.WidthFill) + btnsHtml.below;
         
         return dict;
     }
@@ -2053,7 +2068,7 @@
         
         // FIELD HTML
         var btnsHtml = GetBtnsHtml(formKeys, modsDict, true, pack);
-        dict.Html += btnsHtml.above + btnsHtml.left + btnsHtml.right + GetFieldHtml("textarea", dict.FieldClassList, dict.FieldAttrs, dict.WidthFill, val) + btnsHtml.below;
+        dict.Html += btnsHtml.above + btnsHtml.left + btnsHtml.right + GetFieldHtml("textarea", pack, dict.FieldClassList, dict.FieldAttrs, dict.WidthFill, val) + btnsHtml.below;
         
         return dict;
     }
@@ -2099,7 +2114,7 @@
         
         // FIELD HTML
         var btnsHtml = GetBtnsHtml(formKeys, modsDict, true, pack);
-        dict.Html += btnsHtml.above + btnsHtml.left + btnsHtml.right + GetFieldHtml("select", dict.FieldClassList, dict.FieldAttrs, dict.WidthFill, optsHtml) + btnsHtml.below;
+        dict.Html += btnsHtml.above + btnsHtml.left + btnsHtml.right + GetFieldHtml("select", pack, dict.FieldClassList, dict.FieldAttrs, dict.WidthFill, optsHtml) + btnsHtml.below;
         
         return dict;
     }
@@ -2194,7 +2209,7 @@
             
             // FINAL HTML
             dict.Html += "<label " + GetAttr('class', labelClassList.join(' ')) + ">";
-            dict.Html += labelHtml.left + labelHtml.above + GetFieldHtml("input", (dict.FieldClassList).slice(0), optAttrs, dict.WidthFill) + labelHtml.right + labelHtml.below;
+            dict.Html += labelHtml.left + labelHtml.above + GetFieldHtml("input", pack, (dict.FieldClassList).slice(0), optAttrs, dict.WidthFill) + labelHtml.right + labelHtml.below;
             dict.Html += "</label>";
         }
         
@@ -2292,7 +2307,7 @@
             
             // FINAL HTML
             dict.Html += "<label " + GetAttr('class', labelClassList.join(' ')) + ">";
-            dict.Html += labelHtml.left + labelHtml.above + GetFieldHtml("input", (dict.FieldClassList).slice(0), optAttrs, dict.WidthFill) + labelHtml.right + labelHtml.below;
+            dict.Html += labelHtml.left + labelHtml.above + GetFieldHtml("input", pack, (dict.FieldClassList).slice(0), optAttrs, dict.WidthFill) + labelHtml.right + labelHtml.below;
             dict.Html += "</label>";
         }
         
@@ -2323,7 +2338,7 @@
         
         // FIELD HTML
         var btnsHtml = GetBtnsHtml(formKeys, modsDict, true, pack);
-        dict.Html += btnsHtml.above + btnsHtml.left + btnsHtml.right + GetFieldHtml("input", dict.FieldClassList, dict.FieldAttrs, dict.WidthFill) + btnsHtml.below;
+        dict.Html += btnsHtml.above + btnsHtml.left + btnsHtml.right + GetFieldHtml("input", pack, dict.FieldClassList, dict.FieldAttrs, dict.WidthFill) + btnsHtml.below;
         
         return dict;
     }
@@ -2345,7 +2360,7 @@
         dict = ProcessSharedMods(supportedMods, modsDict, dict);
         
         // FIELD HTML
-        dict.Html += GetFieldHtml("input", dict.FieldClassList, dict.FieldAttrs, dict.WidthFill);
+        dict.Html += GetFieldHtml("input", pack, dict.FieldClassList, dict.FieldAttrs, dict.WidthFill);
         
         return dict;
     }
@@ -2391,7 +2406,7 @@
         dict.FieldAttrs.push(GetDAttr(ATTR.DATA_DTPicker, paramDict));
         
         // FIELD HTML
-        dict.Html += GetFieldHtml("input", dict.FieldClassList, dict.FieldAttrs, dict.WidthFill);
+        dict.Html += GetFieldHtml("input", pack, dict.FieldClassList, dict.FieldAttrs, dict.WidthFill);
         
         return dict;
     }
@@ -2430,7 +2445,8 @@
             if (MOD.ButtonIconLabelPosition in modsDict) { iconLabelPos = modsDict[MOD.ButtonIconLabelPosition][KEY.param]; }
             if (MOD.ButtonFunction in modsDict) { funct = modsDict[MOD.ButtonFunction][KEY.param]; }
             if (MOD.ButtonFunctionParam in modsDict) { functParam = modsDict[MOD.ButtonFunctionParam][KEY.param]; }
-        } catch(e){};
+
+        } catch (e) { if (window.console) { console.log("JFS Error: Error parsing button field modifiers.", formKeys, e); } }
         
         var inner = "";
         var iconHtml = "";
@@ -2447,7 +2463,7 @@
         dict.FieldAttrs.push(GetDAttr(ATTR.DATA_FormKeys, formKeys));
         
         // FIELD HTML
-        dict.Html += GetFieldHtml("button", dict.FieldClassList, dict.FieldAttrs, dict.WidthFill, inner);
+        dict.Html += GetFieldHtml("button", pack, dict.FieldClassList, dict.FieldAttrs, dict.WidthFill, inner);
         
         return dict;
     }
@@ -2476,15 +2492,22 @@
         dict = ProcessSharedMods(supportedMods, modsDict, dict);
         
         // RANGE ATTRIBUTES
-        if (MOD.Min in modsDict) { try { dict.FieldAttrs.push(GetAttr('min', modsDict[MOD.Min][KEY.param])); } catch(e){}; }
-        if (MOD.Max in modsDict) { try { dict.FieldAttrs.push(GetAttr('max', modsDict[MOD.Max][KEY.param])); } catch(e){}; }
+        if (MOD.Min in modsDict) {
+            try { dict.FieldAttrs.push(GetAttr('min', modsDict[MOD.Min][KEY.param])); }
+            catch (e) { if (window.console) { console.log("JFS Error: Error parsing minimum modifier.", formKeys, e); } }
+        }
+
+        if (MOD.Max in modsDict) {
+            try { dict.FieldAttrs.push(GetAttr('max', modsDict[MOD.Max][KEY.param])); }
+            catch (e) { if (window.console) { console.log("JFS Error: Error parsing maximum modifier.", formKeys, e); } }
+        }
         
         // ADD CLASS FOR BROWSERS THAT DON'T SUPPORT
         dict.FieldClassList.push(CLS.Field + "_input_" + type);
         
         // FIELD HTML
         var btnsHtml = GetBtnsHtml(formKeys, modsDict, allowBtns, pack);
-        dict.Html += btnsHtml.above + btnsHtml.left + btnsHtml.right + GetFieldHtml("input", dict.FieldClassList, dict.FieldAttrs, dict.WidthFill) + btnsHtml.below;
+        dict.Html += btnsHtml.above + btnsHtml.left + btnsHtml.right + GetFieldHtml("input", pack, dict.FieldClassList, dict.FieldAttrs, dict.WidthFill) + btnsHtml.below;
         
         return dict;
     }
@@ -2508,15 +2531,23 @@
         if ((sup.indexOf(MOD.Length) !== -1) && (MOD.Length in mods)) {
             try {
                 var lenDict = GetParamsDict(mods[MOD.Length][KEY.params]);
-                if (MOD.Min in lenDict) { try { dict.FieldAttrs.push(GetDAttr(ATTR.DATA_MinLength, parseInt(lenDict[MOD.Min]))); } catch(e){}; } // NOTE: SWITCH TO HTML5 'pattern' WHEN SAFARI SUPPORTS
-                if (MOD.Max in lenDict) { try { dict.FieldAttrs.push(GetAttr(ATTR.MaxLength, lenDict[MOD.Max])); } catch(e){}; } // NOTE: SWITCH TO HTML5 'pattern' WHEN SAFARI SUPPORTS
+                if (MOD.Min in lenDict) { // NOTE: SWITCH TO HTML5 'pattern' WHEN SAFARI SUPPORTS
+                    try { dict.FieldAttrs.push(GetDAttr(ATTR.DATA_MinLength, parseInt(lenDict[MOD.Min]))); }
+                    catch (e) { if (window.console) { console.log("JFS Error: Error parsing min length status modifier.", mods, e); } }
+                }
+                if (MOD.Max in lenDict) { // NOTE: SWITCH TO HTML5 'pattern' WHEN SAFARI SUPPORTS
+                    try { dict.FieldAttrs.push(GetAttr(ATTR.MaxLength, lenDict[MOD.Max])); }
+                    catch (e) { if (window.console) { console.log("JFS Error: Error parsing max length status modifier.", mods, e); } }
+                }
                 if (MOD.Status in lenDict) {
                     try {
                         var status = (lenDict[MOD.Status] !== "" ? lenDict[MOD.Status] : "always");
                         dict.FieldAttrs.push(GetDAttr(ATTR.DATA_ShowStatus, status));
                     
-                    } catch(e){}; }
-            } catch(e){};
+                    } catch (e) { if (window.console) { console.log("JFS Error: Error parsing length status modifier.", mods, e); } }
+                }
+
+            } catch (e) { if (window.console) { console.log("JFS Error: Error parsing length modifiers.", mods, e); } }
         }
         if ((sup.indexOf(MOD.CharCounter) !== -1) && (MOD.CharCounter in mods)) {
             dict.FieldClassList.push(CLS.CharCounter);
@@ -2526,23 +2557,35 @@
             dict.FieldClassList.push(CLS.WordCounter);
             dict.FieldContClassList.push(CLS.WordCounter);
         }
-        if ((sup.indexOf(MOD.WidthFillWrap) !== -1) && (MOD.WidthFillWrap in mods))  { try { dict.WidthFill = (mods[MOD.WidthFillWrap][KEY.param] === "true"); } catch(e){}; }
-        if ((sup.indexOf(MOD.AllowChars) !== -1) && (MOD.AllowChars in mods))        { try { dict.FieldAttrs.push(GetDAttr(ATTR.DATA_AllowChars, mods[MOD.AllowChars][KEY.param])); } catch(e){}; }
-        if ((sup.indexOf(MOD.PreventChars) !== -1) && (MOD.PreventChars in mods))    { try { dict.FieldAttrs.push(GetDAttr(ATTR.DATA_PreventChars, mods[MOD.PreventChars][KEY.param])); } catch(e){}; }
+        if ((sup.indexOf(MOD.WidthFillWrap) !== -1) && (MOD.WidthFillWrap in mods)) {
+            try { dict.WidthFill = (mods[MOD.WidthFillWrap][KEY.param] === "true"); }
+            catch (e) { if (window.console) { console.log("JFS Error: Error parsing width fill wrap modifier.", mods, e); } }
+        }
+
+        if ((sup.indexOf(MOD.AllowChars) !== -1) && (MOD.AllowChars in mods)) {
+            try { dict.FieldAttrs.push(GetDAttr(ATTR.DATA_AllowChars, mods[MOD.AllowChars][KEY.param])); }
+            catch (e) { if (window.console) { console.log("JFS Error: Error parsing allow chars modifier.", mods, e); } }
+        }
+
+        if ((sup.indexOf(MOD.PreventChars) !== -1) && (MOD.PreventChars in mods)) {
+            try { dict.FieldAttrs.push(GetDAttr(ATTR.DATA_PreventChars, mods[MOD.PreventChars][KEY.param])); }
+            catch (e) { if (window.console) { console.log("JFS Error: Error parsing prevent chars modifier.", mods, e); } }
+        }
         
         return dict;
     }
     
     // GET FIELD HTML
-    function GetFieldHtml(type, classes, attrs, wrap, inner) {
+    function GetFieldHtml(type, pack, classes, attrs, wrap, inner) {
         var html = "";
         classes.push(CLS.Field + "_" + type);
         attrs.push(GetAttr('class', classes.join(' ')));
+        if (pack.AddZeroedTabIndexes) { attrs.push(GetAttr('tabindex', '0')); }
         
         if (type === "input") { html = "<input " + attrs.join(' ') + "/>"; }
         else if (type === "textarea") { html = "<textarea " + attrs.join(' ') + ">" + HtmlSafe(inner) + "</textarea>"; }
         else if (type === "select") { html = "<select " + attrs.join(' ') + ">" + inner + "</select>"; }
-        else if (type === "button") { html = "<button " + attrs.join(' ') + ">" + inner + "</button>" }
+        else if (type === "button") { html = "<button " + attrs.join(' ') + ">" + inner + "</button>"; }
         
         if (wrap) { html = WrapWithWidthSpan(html); }
         return html;
@@ -2584,7 +2627,7 @@
             // HTML
             html += "<option " + optAttrs.join(' ') + ">" + optDict[KEY.label] + "</option>";
             
-        } catch(e){};
+        } catch (e) { if (window.console) { console.log("JFS Error: Error parsing select option modifiers.", optDict, e); } }
 
         return html;
     }
@@ -2629,7 +2672,8 @@
                     
                     btnsHtml[btnPos] += "<button " + attrs.join(' ') + ">" + inner + "</button>";
                 }
-            } catch(e){};
+
+            } catch (e) { if (window.console) { console.log("JFS Error: Error parsing augment buttons modifiers.", modsDict, e); } }
         }
         return btnsHtml;
     }
@@ -2919,11 +2963,11 @@
     function PreDefs(useEmpty) {
     
         var currentDate = new Date();
-        var yearValues = []; for (var i = 0; i < 10; i++) { yearValues[i] = parseInt(currentDate.getUTCFullYear() + i) + ""; }
-        var dayValues = []; for (var i = 0; i < 31; i++) { dayValues[i] = ZeroPadInt(i + 1, 2) + ""; }
-        var hourValues = []; for (var i = 0; i < 12; i++) { hourValues[i] = ZeroPadInt(i + 1, 2) + ""; }
-        var minuteValues = []; for (var i = 0; i < 60; i++) { minuteValues[i] = ZeroPadInt(i, 2) + ""; }
-        var secondValues = []; for (var i = 0; i < 60; i++) { secondValues[i] = ZeroPadInt(i, 2) + ""; }
+        var yearValues = []; for (var y = 0; y < 10; y++) { yearValues[y] = parseInt(currentDate.getUTCFullYear() + y) + ""; }
+        var dayValues = []; for (var d = 0; d < 31; d++) { dayValues[d] = ZeroPadInt(d + 1, 2) + ""; }
+        var hourValues = []; for (var h = 0; h < 12; h++) { hourValues[h] = ZeroPadInt(h + 1, 2) + ""; }
+        var minuteValues = []; for (var m = 0; m < 60; m++) { minuteValues[m] = ZeroPadInt(m, 2) + ""; }
+        var secondValues = []; for (var s = 0; s < 60; s++) { secondValues[s] = ZeroPadInt(s, 2) + ""; }
         var nameprefixes = [ "Ms", "Miss", "Mrs", "Mr", "Dr", "Prof", "Coach", "Pres", "Atty", "Rev", "Hon" ];
         var genders = [ "Female", "Male" ];
         var maritalstatuses = [ "Single", "Married", "Separated", "Divorced", "Widowed", "Other" ];
