@@ -1,6 +1,6 @@
 
-/*! JFS - v1.4.2 - 2020/03/10 */
-// RELEASE NOTES: Add tabindex="0" to all inputs for better accessability. Also add tabindex flag and change "ResetPageTabIndexes" default to false. Misc Lint cleanup.
+/*! JFS - v1.4.3 - 2020/04/17 */
+// RELEASE NOTES: Expose PreDefs for more flexibility in combining predefined option sets.
 (function(window,undefined) {
     "use strict";
     
@@ -275,6 +275,7 @@
         ParseFormXml: ObjectifyFormXml,
         ParseValuesXml: ObjectifyValuesXml,
         PerformFormActions: PerformActions,
+        GetPredefinedOptions: PreDefs,
 		ParseSelectOptions: GetSelectOptionsHtml,
         ParseModifiersList: GetModsDict,
         ParseModifierParamsList: GetParamsDict,
