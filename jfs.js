@@ -1,14 +1,11 @@
 
-/*! JFS - v1.4.3 - 2020/04/17 */
-// RELEASE NOTES: Expose PreDefs for more flexibility in combining predefined option sets.
+/*! JFS - v1.4.4 - 2020/05/29 */
 (function(window,undefined) {
     "use strict";
     
     // JFS CONSTANTS
     var LIB_LOADING_DELAY = 500;
-    var KEYUP_DELAY = 500;
     var MAXIMUM_GROUP_ITEMS = 500;
-    var CLS_PREFIX = "jfs_";
     var BLANK_FILENAME = "blank.html";
     var HTML5_FIELD_TYPES = [ "search", "number", "range", "color", "tel", "url", "email", "month", "week", "time", "date", "datetime", "datetime-local" ];
     var TEXT_FIELD_TYPES = [ "text", "password", "hidden", "search", "range", "color", "tel", "url", "email", "month", "week", "time" ];
@@ -196,22 +193,27 @@
     // JFS VARS
     var libsLoaded = false;
     var libraryDir = "/";
-    var inputTypeSupport = {};
     var characterCountTimer;
     var textFieldsSelector;
     var selectionFieldsSelector;
         
-    // MAKE SURE JQUERY IS LOADED
-    if (window.jQuery) {
+    // MAKE SURE JQUERY IS LOADED AND GET SCRIPT LOCATION
+    if (!window.jQuery) { alert("JBU Forms Error: jQuery Library Not Loaded."); }
+    else {
         libsLoaded = true;
         
-        // GET SCRIPT LOCATION
-        var scripts = document.getElementsByTagName("script");
-        var scriptSrcArray = scripts[scripts.length - 1].getAttribute("src").split('?');
+        // SCRIPT LOCATION (FIRST TRY BY ID BECAUSE IT IS 100% RELIABLE, THEN TRY CURRENT SCRIPT PATH)
+        var libScript;
+        var idScript = document.getElementById("jfs-library-script");
+        if (idScript !== null) { libScript = idScript; }
+        else {
+            var allScripts = document.getElementsByTagName("script");
+            libScript = allScripts[allScripts.length - 1];
+        }
+       
+        var scriptSrcArray = libScript.getAttribute("src").split('?');
         libraryDir = scriptSrcArray[0].split('/').slice(0, -1).join('/') + '/';
-
-    } else { alert("JBU Forms Error: jQuery Library Not Loaded."); }
-    
+    }
 
     // PUBLIC FUNCTIONS ///////////////////////////////////////////////////////////////////////////
     var JFS = {
@@ -226,9 +228,7 @@
                     pack.Container = jQuery('#' + pack.ContainerId);
                     
                     if (pack.Container.length > 0) {
-                        // INPUT SUPPORT DETECTION
-                        //inputTypeSupport = DetectInputSupport();
-                        
+
                         // CREATE FieldsInit DICTIONARY BY CLONING form
                         pack.FieldsInit = CloneObject(form);
                         
@@ -2690,17 +2690,6 @@
         if (!libsLoaded) { var t = setTimeout(function() { InitWait(fields, pack); }, LIB_LOADING_DELAY); }
         else { JFS.Init(fields, pack); }
     }
-    
-    // DETECT WHICH HTML5 INPUTS ARE SUPPORTED BY BROWSER
-    // function DetectInputSupport() {
-        // var d = {};
-        // var i = document.createElement("input");
-        // for (var a = 0; a < HTML5_FIELD_TYPES.length; a++) {
-            // i.setAttribute("type", HTML5_FIELD_TYPES[a]);
-            // d[HTML5_FIELD_TYPES[a]] = (i.type !== "text");
-        // }
-        // return d;
-    // }
     
     // CONVERT FIELDS XML STRING TO FIELDS OBJECT
     function ObjectifyFormXml(xmlString) {
