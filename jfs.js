@@ -1,5 +1,5 @@
 
-/*! JFS - v1.4.4 - 2020/05/29 */
+/*! JFS - v1.4.5 - 2022/01/04 */
 (function(window,undefined) {
     "use strict";
     
@@ -87,6 +87,11 @@
             ReqCustom: "requiredcustom",
             LabelSuffix: "labelsuffix",
             AddClass: "addclass",
+            AddClassToPair: "addclasstopair",
+            AddClassToLabelContainer: "addclasstolabelcont",
+            AddClassToLabel: "addclasstolabel",
+            AddClassToFieldContainer: "addclasstofieldcont",
+            AddClassToField: "addclasstofield",
             AddDataAttrs: "adddataattributes",
             Length: "length",
             Min: "min",
@@ -1632,14 +1637,14 @@
                     break;
                     
                 case 'pair':
-                    classes.push(CLS.Pair);
-                    attrs.push(GetAttr('class', classes.join(' ')));
-                    
-                    var inFieldset = ((target[KEY.type] === "radio") || (target[KEY.type] === "checkbox"));
-                    
-                    // MODS
                     var pairMods = GetModsDict((KEY.mods in target ? target[KEY.mods] : []));
                     var pairAugHtml = GetAugmentHtml(pairMods);
+                    if ((MOD.AddClassToPair in pairMods) && (KEY.param in pairMods[MOD.AddClassToPair])) { classes.push(pairMods[MOD.AddClassToPair][KEY.param]); }
+
+                    classes.push(CLS.Pair);
+                    attrs.push(GetAttr('class', classes.join(' ')));
+
+                    var inFieldset = ((target[KEY.type] === "radio") || (target[KEY.type] === "checkbox"));
                     
                     var pairHtml = "<div " + attrs.join(' ') + ">";
                     if (pairAugHtml.above !== "") { pairHtml += "<div class='" + CLS.AugmentHtml + " " + CLS.AugmentHtmlAbove + "'>" + pairAugHtml.above + "</div>"; }
@@ -1666,12 +1671,12 @@
                     break;
                     
                 case 'label':
-                    classes.push(CLS.Label);
-                    attrs.push(GetAttr('class', classes.join(' ')));
-                    
-                    // MODS
                     var labelMods = GetModsDict((KEY.mods in target ? target[KEY.mods] : []));
                     var labelAugHtml = GetAugmentHtml(labelMods);
+                    if ((MOD.AddClassToLabelContainer in labelMods) && (KEY.param in labelMods[MOD.AddClassToLabelContainer])) { classes.push(labelMods[MOD.AddClassToLabelContainer][KEY.param]); }
+
+                    classes.push(CLS.Label);
+                    attrs.push(GetAttr('class', classes.join(' ')));
                     
                     var labelHtml = "<div " + attrs.join(' ') + ">";
                     if (labelAugHtml.label_above !== "") { labelHtml += "<div class='" + CLS.AugmentHtml + " " + CLS.AugmentHtmlLabelAbove + "'>" + labelAugHtml.label_above + "</div>"; }
@@ -1683,12 +1688,12 @@
                     break;
                     
                 case 'field':
-                    classes.push(CLS.Field);
-                    attrs.push(GetAttr('class', classes.join(' ')));
-                    
-                    // MODS
                     var fieldMods = GetModsDict((KEY.mods in target ? target[KEY.mods] : []));
                     var fieldAugHtml = GetAugmentHtml(fieldMods);
+                    if ((MOD.AddClassToFieldContainer in fieldMods) && (KEY.param in fieldMods[MOD.AddClassToFieldContainer])) { classes.push(fieldMods[MOD.AddClassToFieldContainer][KEY.param]); }
+
+                    classes.push(CLS.Field);
+                    attrs.push(GetAttr('class', classes.join(' ')));
                     
                     var fieldHtml = "<div " + attrs.join(' ') + ">";
                     if (fieldAugHtml.field_above !== "") { fieldHtml += "<div class='" + CLS.AugmentHtml + " " + CLS.AugmentHtmlFieldAbove + "'>" + fieldAugHtml.field_above + "</div>"; }
@@ -1840,6 +1845,8 @@
         
         // DO NOT RENDER ANYTHING IF NO LABEL SPECIFIED
         if (KEY.label in field) {
+            var labelClasses = [];
+            var labelAttrs = [];
             
             // INFO BUBBLE
             var infoBubHtml = "";
@@ -1888,11 +1895,15 @@
             }
 			
 			labelHtml += infoBubHtml;
+
+            if ((MOD.AddClassToLabel in modsDict) && (KEY.param in modsDict[MOD.AddClassToLabel])) { labelClasses.push(modsDict[MOD.AddClassToLabel][KEY.param]); }
+
+            labelAttrs.push(GetAttr('class', labelClasses.join(' ')));
             
             // HTML (NOTE: RADIOS AND CHECKBOXES GET LEGENDS INSTEAD BECAUSE LABELS ARE ONLY FOR INDIVIDUAL INPUTS)
-            if ((field[KEY.type] === "radio") || (field[KEY.type] === "checkbox")) { labelHtml = "<legend>" + labelHtml + "</legend>"; }
-            else if (field[KEY.type] === "repeatablegroup") { labelHtml = "<p>" + labelHtml + "</p>"; }
-            else { labelHtml = "<label for=\"" + GetFieldId(formKeys, pack) + "\">" + labelHtml + "</label>"; }
+            if ((field[KEY.type] === "radio") || (field[KEY.type] === "checkbox")) { labelHtml = "<legend " + labelAttrs.join(' ') + ">" + labelHtml + "</legend>"; }
+            else if (field[KEY.type] === "repeatablegroup") { labelHtml = "<p " + labelAttrs.join(' ') + ">" + labelHtml + "</p>"; }
+            else { labelHtml = "<label for=\"" + GetFieldId(formKeys, pack) + "\" " + labelAttrs.join(' ') + ">" + labelHtml + "</label>"; }
             
             contHtml = ContainerWrap('label', field, 0, classes, [], [], labelHtml, pack);
         }
@@ -2019,6 +2030,7 @@
     // TEXT FIELD
     function GetTextFieldDict(field, fieldClassList, modsDict, formKeys, pack) {
         var dict = { FieldCont: 'field', FieldAttrs: [], FieldClassList: fieldClassList, WidthFill: true, Html: "", FieldContClassList: [], LabelContClassList: [], PairContClassList: [] };
+        var fieldTagClassList = fieldClassList.slice(0);
         
         // BASE FIELD ATTRS
         dict.FieldAttrs.push(GetAttr('id', GetFieldId(formKeys, pack)));
@@ -2028,6 +2040,7 @@
         dict.FieldAttrs.push(GetDAttr(ATTR.DATA_FormKeys, formKeys));
         if (KEY.title in field) { dict.FieldAttrs.push(GetAttr(ATTR.Title, field[KEY.title])); }
         if (KEY.disabled in field && (field[KEY.disabled] === "true")) { dict.FieldAttrs.push(ATTR.Disabled); }
+        if ((MOD.AddClassToField in modsDict) && (KEY.param in modsDict[MOD.AddClassToField])) { fieldTagClassList.push(modsDict[MOD.AddClassToField][KEY.param]); }
         if (KEY.placeholder in field) { dict.FieldAttrs.push(GetAttr(ATTR.PlaceHolder, field[KEY.placeholder])); }
         if (KEY.autofocus in field) { dict.FieldAttrs.push(ATTR.AutoFocus); }
         if (KEY.autocomplete in field) { dict.FieldAttrs.push(GetAttr(ATTR.AutoComplete, (field[KEY.autocomplete] === "true" ? "on" : "off"))); }
@@ -2040,7 +2053,7 @@
         
         // FIELD HTML
         var btnsHtml = GetBtnsHtml(formKeys, modsDict, true, pack);
-        dict.Html += btnsHtml.above + btnsHtml.left + btnsHtml.right + GetFieldHtml("input", pack, dict.FieldClassList, dict.FieldAttrs, dict.WidthFill) + btnsHtml.below;
+        dict.Html += btnsHtml.above + btnsHtml.left + btnsHtml.right + GetFieldHtml("input", pack, fieldTagClassList, dict.FieldAttrs, dict.WidthFill) + btnsHtml.below;
         
         return dict;
     }
@@ -2048,6 +2061,7 @@
     // TEXTAREA FIELD
     function GetTextareaFieldDict(field, fieldClassList, modsDict, formKeys, pack) {
         var dict = { FieldCont: 'field', FieldAttrs: [], FieldClassList: fieldClassList, WidthFill: true, Html: "", FieldContClassList: [], LabelContClassList: [], PairContClassList: [] };
+        var fieldTagClassList = fieldClassList.slice(0);
         var val = "";
         
         // BASE FIELD ATTRS
@@ -2058,6 +2072,7 @@
         dict.FieldAttrs.push(GetDAttr(ATTR.DATA_FormKeys, formKeys));
         if (KEY.title in field) { dict.FieldAttrs.push(GetAttr(ATTR.Title, field[KEY.title])); }
         if (KEY.disabled in field && (field[KEY.disabled] === "true")) { dict.FieldAttrs.push(ATTR.Disabled); }
+        if ((MOD.AddClassToField in modsDict) && (KEY.param in modsDict[MOD.AddClassToField])) { fieldTagClassList.push(modsDict[MOD.AddClassToField][KEY.param]); }
         if (KEY.placeholder in field) { dict.FieldAttrs.push(GetAttr(ATTR.PlaceHolder, field[KEY.placeholder])); }
         if (KEY.autofocus in field) { dict.FieldAttrs.push(ATTR.AutoFocus); }
         if (pack.UseHtml5Required && (MOD.Req in modsDict)) { dict.FieldAttrs.push(ATTR.Required); }
@@ -2069,7 +2084,7 @@
         
         // FIELD HTML
         var btnsHtml = GetBtnsHtml(formKeys, modsDict, true, pack);
-        dict.Html += btnsHtml.above + btnsHtml.left + btnsHtml.right + GetFieldHtml("textarea", pack, dict.FieldClassList, dict.FieldAttrs, dict.WidthFill, val) + btnsHtml.below;
+        dict.Html += btnsHtml.above + btnsHtml.left + btnsHtml.right + GetFieldHtml("textarea", pack, fieldTagClassList, dict.FieldAttrs, dict.WidthFill, val) + btnsHtml.below;
         
         return dict;
     }
@@ -2077,6 +2092,7 @@
     // SELECT FIELD
     function GetSelectFieldDict(field, fieldClassList, modsDict, formKeys, pack) {
         var dict = { FieldCont: 'field', FieldAttrs: [], FieldClassList: fieldClassList, WidthFill: true, Html: "", FieldContClassList: [], LabelContClassList: [], PairContClassList: [] };
+        var fieldTagClassList = fieldClassList.slice(0);
         var val = "";
         
         // BASE FIELD ATTRS
@@ -2087,6 +2103,7 @@
         dict.FieldAttrs.push(GetDAttr(ATTR.DATA_FormKeys, formKeys));
         if (KEY.title in field) { dict.FieldAttrs.push(GetAttr(ATTR.Title, field[KEY.title])); }
         if (KEY.disabled in field && (field[KEY.disabled] === "true")) { dict.FieldAttrs.push(ATTR.Disabled); }
+        if ((MOD.AddClassToField in modsDict) && (KEY.param in modsDict[MOD.AddClassToField])) { fieldTagClassList.push(modsDict[MOD.AddClassToField][KEY.param]); }
         if (KEY.autofocus in field) { dict.FieldAttrs.push(ATTR.AutoFocus); }
         if (pack.UseHtml5Required && (MOD.Req in modsDict)) { dict.FieldAttrs.push(ATTR.Required); }
         if (KEY.field_value in field) { val = field[KEY.field_value]; }
@@ -2115,7 +2132,7 @@
         
         // FIELD HTML
         var btnsHtml = GetBtnsHtml(formKeys, modsDict, true, pack);
-        dict.Html += btnsHtml.above + btnsHtml.left + btnsHtml.right + GetFieldHtml("select", pack, dict.FieldClassList, dict.FieldAttrs, dict.WidthFill, optsHtml) + btnsHtml.below;
+        dict.Html += btnsHtml.above + btnsHtml.left + btnsHtml.right + GetFieldHtml("select", pack, fieldTagClassList, dict.FieldAttrs, dict.WidthFill, optsHtml) + btnsHtml.below;
         
         return dict;
     }
@@ -2123,12 +2140,14 @@
     // RADIO FIELD
     function GetRadioFieldDict(field, fieldClassList, modsDict, formKeys, pack) {
         var dict = { FieldCont: 'field', FieldAttrs: [], FieldClassList: fieldClassList, WidthFill: false, Html: "", FieldContClassList: [], LabelContClassList: [], PairContClassList: [], FieldsetAttrs: [] };
+        var fieldTagClassList = fieldClassList.slice(0);
         var val = "";
         
         // BASE FIELD ATTRS
         var idPrefix = GetFieldId(formKeys, pack);
         dict.FieldAttrs.push(GetAttr('type', 'radio'));
         if (KEY.title in field) { dict.FieldsetAttrs.push(GetAttr(ATTR.Title, field[KEY.title])); }
+        if ((MOD.AddClassToField in modsDict) && (KEY.param in modsDict[MOD.AddClassToField])) { fieldTagClassList.push(modsDict[MOD.AddClassToField][KEY.param]); }
         if (KEY.autofocus in field) { dict.FieldAttrs.push(ATTR.AutoFocus); }
         if (KEY.field_value in field) { val = field[KEY.field_value]; }
         dict.FieldContClassList.push(CLS.Field + "_radio");
@@ -2210,7 +2229,7 @@
             
             // FINAL HTML
             dict.Html += "<label " + GetAttr('class', labelClassList.join(' ')) + ">";
-            dict.Html += labelHtml.left + labelHtml.above + GetFieldHtml("input", pack, (dict.FieldClassList).slice(0), optAttrs, dict.WidthFill) + labelHtml.right + labelHtml.below;
+            dict.Html += labelHtml.left + labelHtml.above + GetFieldHtml("input", pack, fieldTagClassList, optAttrs, dict.WidthFill) + labelHtml.right + labelHtml.below;
             dict.Html += "</label>";
         }
         
@@ -2220,6 +2239,7 @@
     // CHECKBOX FIELD
     function GetCheckboxFieldDict(field, fieldClassList, modsDict, formKeys, pack) {
         var dict = { FieldCont: 'field', FieldAttrs: [], FieldClassList: fieldClassList, WidthFill: false, Html: "", FieldContClassList: [], LabelContClassList: [], PairContClassList: [], FieldsetAttrs: [] };
+        var fieldTagClassList = fieldClassList.slice(0);
         var val = [];
         
         // BASE FIELD ATTRS
@@ -2227,6 +2247,7 @@
         //dict.FieldAttrs.push(GetAttr('name', field[KEY.key]));
         dict.FieldAttrs.push(GetAttr('type', 'checkbox'));
         if (KEY.title in field) { dict.FieldsetAttrs.push(GetAttr(ATTR.Title, field[KEY.title])); }
+        if ((MOD.AddClassToField in modsDict) && (KEY.param in modsDict[MOD.AddClassToField])) { fieldTagClassList.push(modsDict[MOD.AddClassToField][KEY.param]); }
         if (KEY.autofocus in field) { dict.FieldAttrs.push(ATTR.AutoFocus); }
         if (KEY.field_value in field) { val = field[KEY.field_value].split(SEP.Checkbox_Value); }
         dict.FieldContClassList.push(CLS.Field + "_checkbox");
@@ -2308,7 +2329,7 @@
             
             // FINAL HTML
             dict.Html += "<label " + GetAttr('class', labelClassList.join(' ')) + ">";
-            dict.Html += labelHtml.left + labelHtml.above + GetFieldHtml("input", pack, (dict.FieldClassList).slice(0), optAttrs, dict.WidthFill) + labelHtml.right + labelHtml.below;
+            dict.Html += labelHtml.left + labelHtml.above + GetFieldHtml("input", pack, fieldTagClassList, optAttrs, dict.WidthFill) + labelHtml.right + labelHtml.below;
             dict.Html += "</label>";
         }
         
@@ -2318,6 +2339,7 @@
     // PASSWORD FIELD
     function GetPasswordFieldDict(field, fieldClassList, modsDict, formKeys, pack) {
         var dict = { FieldCont: 'field', FieldAttrs: [], FieldClassList: fieldClassList, WidthFill: true, Html: "", FieldContClassList: [], LabelContClassList: [], PairContClassList: [] };
+        var fieldTagClassList = fieldClassList.slice(0);
         
         // BASE FIELD ATTRS
         dict.FieldAttrs.push(GetAttr('id', GetFieldId(formKeys, pack)));
@@ -2327,6 +2349,7 @@
         dict.FieldAttrs.push(GetDAttr(ATTR.DATA_FormKeys, formKeys));
         if (KEY.title in field) { dict.FieldAttrs.push(GetAttr(ATTR.Title, field[KEY.title])); }
         if (KEY.disabled in field && (field[KEY.disabled] === "true")) { dict.FieldAttrs.push(ATTR.Disabled); }
+        if ((MOD.AddClassToField in modsDict) && (KEY.param in modsDict[MOD.AddClassToField])) { fieldTagClassList.push(modsDict[MOD.AddClassToField][KEY.param]); }
         if (KEY.autofocus in field) { dict.FieldAttrs.push(ATTR.AutoFocus); }
         if (KEY.autocomplete in field) { dict.FieldAttrs.push(GetAttr(ATTR.AutoComplete, (field[KEY.autocomplete] === "true" ? "on" : "off"))); }
         if (pack.UseHtml5Required && (MOD.Req in modsDict)) { dict.FieldAttrs.push(ATTR.Required); }
@@ -2339,7 +2362,7 @@
         
         // FIELD HTML
         var btnsHtml = GetBtnsHtml(formKeys, modsDict, true, pack);
-        dict.Html += btnsHtml.above + btnsHtml.left + btnsHtml.right + GetFieldHtml("input", pack, dict.FieldClassList, dict.FieldAttrs, dict.WidthFill) + btnsHtml.below;
+        dict.Html += btnsHtml.above + btnsHtml.left + btnsHtml.right + GetFieldHtml("input", pack, fieldTagClassList, dict.FieldAttrs, dict.WidthFill) + btnsHtml.below;
         
         return dict;
     }
@@ -2347,6 +2370,7 @@
     // HIDDEN FIELD
     function GetHiddenFieldDict(field, fieldClassList, modsDict, formKeys, pack) {
         var dict = { FieldCont: 'field', FieldAttrs: [], FieldClassList: fieldClassList, WidthFill: false, Html: "", FieldContClassList: [], LabelContClassList: [], PairContClassList: [] };
+        var fieldTagClassList = fieldClassList.slice(0);
         
         // BASE FIELD ATTRS
         dict.FieldAttrs.push(GetAttr('id', GetFieldId(formKeys, pack)));
@@ -2354,6 +2378,7 @@
         dict.FieldAttrs.push(GetDAttr(ATTR.DATA_FieldName, field[KEY.key]));
         dict.FieldAttrs.push(GetAttr('type', 'hidden'));
         dict.FieldAttrs.push(GetDAttr(ATTR.DATA_FormKeys, formKeys));
+        if ((MOD.AddClassToField in modsDict) && (KEY.param in modsDict[MOD.AddClassToField])) { fieldTagClassList.push(modsDict[MOD.AddClassToField][KEY.param]); }
         if (KEY.field_value in field) { dict.FieldAttrs.push(GetAttr('value', field[KEY.field_value])); }
         
         // SUPPORTED MODS
@@ -2361,7 +2386,7 @@
         dict = ProcessSharedMods(supportedMods, modsDict, dict);
         
         // FIELD HTML
-        dict.Html += GetFieldHtml("input", pack, dict.FieldClassList, dict.FieldAttrs, dict.WidthFill);
+        dict.Html += GetFieldHtml("input", pack, fieldTagClassList, dict.FieldAttrs, dict.WidthFill);
         
         return dict;
     }
@@ -2369,6 +2394,7 @@
     // DATE FIELDS (SINCE BROWSER SUPPORT IS INCONSISTENT WE JUST USE A TEXT FIELD WITH JQUERY UI DATE/TIME PICKER)
     function GetDateFieldDict(field, fieldClassList, modsDict, formKeys, pack) {
         var dict = { FieldCont: 'field', FieldAttrs: [], FieldClassList: fieldClassList, WidthFill: true, Html: "", FieldContClassList: [], LabelContClassList: [], PairContClassList: [] };
+        var fieldTagClassList = fieldClassList.slice(0);
         
         // BASE FIELD ATTRS
         dict.FieldAttrs.push(GetAttr('id', GetFieldId(formKeys, pack)));
@@ -2378,6 +2404,7 @@
         dict.FieldAttrs.push(GetDAttr(ATTR.DATA_FormKeys, formKeys));
         if (KEY.title in field) { dict.FieldAttrs.push(GetAttr(ATTR.Title, field[KEY.title])); }
         if (KEY.disabled in field && (field[KEY.disabled] === "true")) { dict.FieldAttrs.push(ATTR.Disabled); }
+        if ((MOD.AddClassToField in modsDict) && (KEY.param in modsDict[MOD.AddClassToField])) { fieldTagClassList.push(modsDict[MOD.AddClassToField][KEY.param]); }
         if (KEY.placeholder in field) { dict.FieldAttrs.push(GetAttr(ATTR.PlaceHolder, field[KEY.placeholder])); }
         if (KEY.autofocus in field) { dict.FieldAttrs.push(ATTR.AutoFocus); }
         if (pack.UseHtml5Required && (MOD.Req in modsDict)) { dict.FieldAttrs.push(ATTR.Required); }
@@ -2407,7 +2434,7 @@
         dict.FieldAttrs.push(GetDAttr(ATTR.DATA_DTPicker, paramDict));
         
         // FIELD HTML
-        dict.Html += GetFieldHtml("input", pack, dict.FieldClassList, dict.FieldAttrs, dict.WidthFill);
+        dict.Html += GetFieldHtml("input", pack, fieldTagClassList, dict.FieldAttrs, dict.WidthFill);
         
         return dict;
     }
@@ -2415,6 +2442,7 @@
     // BUTTON FIELD
     function GetButtonFieldDict(field, fieldClassList, modsDict, formKeys, pack) {
         var dict = { FieldCont: 'field', FieldAttrs: [], FieldClassList: fieldClassList, WidthFill: true, Html: "", FieldContClassList: [], LabelContClassList: [], PairContClassList: [] };
+        var fieldTagClassList = fieldClassList.slice(0);
         
         // BASE FIELD ATTRS
         dict.FieldAttrs.push(GetAttr('id', GetFieldId(formKeys, pack)));
@@ -2424,6 +2452,7 @@
         dict.FieldAttrs.push(GetDAttr(ATTR.DATA_FormKeys, formKeys));
         if (KEY.title in field) { dict.FieldAttrs.push(GetAttr(ATTR.Title, field[KEY.title])); }
         if (KEY.disabled in field && (field[KEY.disabled] === "true")) { dict.FieldAttrs.push(ATTR.Disabled); }
+        if ((MOD.AddClassToField in modsDict) && (KEY.param in modsDict[MOD.AddClassToField])) { fieldTagClassList.push(modsDict[MOD.AddClassToField][KEY.param]); }
         if (KEY.autofocus in field) { dict.FieldAttrs.push(ATTR.AutoFocus); }
         if (pack.UseLabelsAsFieldTitles && (KEY.label in field) && (field[KEY.label] !== "")) { dict.FieldAttrs.push(GetAttr(ATTR.Title, field[KEY.label])); } // MAY BE OVERRIDDEN BELOW
         if (KEY.field_value in field) { dict.FieldAttrs.push(GetAttr('value', field[KEY.field_value])); }
@@ -2464,7 +2493,7 @@
         dict.FieldAttrs.push(GetDAttr(ATTR.DATA_FormKeys, formKeys));
         
         // FIELD HTML
-        dict.Html += GetFieldHtml("button", pack, dict.FieldClassList, dict.FieldAttrs, dict.WidthFill, inner);
+        dict.Html += GetFieldHtml("button", pack, fieldTagClassList, dict.FieldAttrs, dict.WidthFill, inner);
         
         return dict;
     }
@@ -2472,6 +2501,7 @@
     // REMAINING HTML5 FIELDS
     function GetHtml5FieldDict(type, allowBtns, field, fieldClassList, modsDict, formKeys, pack) {
         var dict = { FieldCont: 'field', FieldAttrs: [], FieldClassList: fieldClassList, WidthFill: true, Html: "", FieldContClassList: [], LabelContClassList: [], PairContClassList: [] };
+        var fieldTagClassList = fieldClassList.slice(0);
         
         // BASE FIELD ATTRS
         dict.FieldAttrs.push(GetAttr('id', GetFieldId(formKeys, pack)));
@@ -2481,6 +2511,7 @@
         dict.FieldAttrs.push(GetDAttr(ATTR.DATA_FormKeys, formKeys));
         if (KEY.title in field) { dict.FieldAttrs.push(GetAttr(ATTR.Title, field[KEY.title])); }
         if (KEY.disabled in field && (field[KEY.disabled] === "true")) { dict.FieldAttrs.push(ATTR.Disabled); }
+        if ((MOD.AddClassToField in modsDict) && (KEY.param in modsDict[MOD.AddClassToField])) { fieldTagClassList.push(modsDict[MOD.AddClassToField][KEY.param]); }
         if (KEY.placeholder in field) { dict.FieldAttrs.push(GetAttr(ATTR.PlaceHolder, field[KEY.placeholder])); }
         if (KEY.autofocus in field) { dict.FieldAttrs.push(ATTR.AutoFocus); }
         if (KEY.autocomplete in field) { dict.FieldAttrs.push(GetAttr(ATTR.AutoComplete, (field[KEY.autocomplete] === "true" ? "on" : "off"))); }
@@ -2508,7 +2539,7 @@
         
         // FIELD HTML
         var btnsHtml = GetBtnsHtml(formKeys, modsDict, allowBtns, pack);
-        dict.Html += btnsHtml.above + btnsHtml.left + btnsHtml.right + GetFieldHtml("input", pack, dict.FieldClassList, dict.FieldAttrs, dict.WidthFill) + btnsHtml.below;
+        dict.Html += btnsHtml.above + btnsHtml.left + btnsHtml.right + GetFieldHtml("input", pack, fieldTagClassList, dict.FieldAttrs, dict.WidthFill) + btnsHtml.below;
         
         return dict;
     }
