@@ -2053,7 +2053,7 @@
         
         // FIELD HTML
         var btnsHtml = GetBtnsHtml(formKeys, modsDict, true, pack);
-        dict.Html += btnsHtml.above + btnsHtml.left + btnsHtml.right + GetFieldHtml("input", pack, fieldTagClassList, dict.FieldAttrs, dict.WidthFill) + btnsHtml.below;
+        dict.Html += btnsHtml.above + btnsHtml.left + btnsHtml.right + GetFieldHtml("input", pack, dict.FieldClassList.concat(fieldTagClassList), dict.FieldAttrs, dict.WidthFill) + btnsHtml.below;
         
         return dict;
     }
@@ -2084,7 +2084,7 @@
         
         // FIELD HTML
         var btnsHtml = GetBtnsHtml(formKeys, modsDict, true, pack);
-        dict.Html += btnsHtml.above + btnsHtml.left + btnsHtml.right + GetFieldHtml("textarea", pack, fieldTagClassList, dict.FieldAttrs, dict.WidthFill, val) + btnsHtml.below;
+        dict.Html += btnsHtml.above + btnsHtml.left + btnsHtml.right + GetFieldHtml("textarea", pack, dict.FieldClassList.concat(fieldTagClassList), dict.FieldAttrs, dict.WidthFill, val) + btnsHtml.below;
         
         return dict;
     }
@@ -2132,7 +2132,7 @@
         
         // FIELD HTML
         var btnsHtml = GetBtnsHtml(formKeys, modsDict, true, pack);
-        dict.Html += btnsHtml.above + btnsHtml.left + btnsHtml.right + GetFieldHtml("select", pack, fieldTagClassList, dict.FieldAttrs, dict.WidthFill, optsHtml) + btnsHtml.below;
+        dict.Html += btnsHtml.above + btnsHtml.left + btnsHtml.right + GetFieldHtml("select", pack, dict.FieldClassList.concat(fieldTagClassList), dict.FieldAttrs, dict.WidthFill, optsHtml) + btnsHtml.below;
         
         return dict;
     }
@@ -2229,7 +2229,7 @@
             
             // FINAL HTML
             dict.Html += "<label " + GetAttr('class', labelClassList.join(' ')) + ">";
-            dict.Html += labelHtml.left + labelHtml.above + GetFieldHtml("input", pack, fieldTagClassList, optAttrs, dict.WidthFill) + labelHtml.right + labelHtml.below;
+            dict.Html += labelHtml.left + labelHtml.above + GetFieldHtml("input", pack, dict.FieldClassList.concat(fieldTagClassList), optAttrs, dict.WidthFill) + labelHtml.right + labelHtml.below;
             dict.Html += "</label>";
         }
         
@@ -2329,7 +2329,7 @@
             
             // FINAL HTML
             dict.Html += "<label " + GetAttr('class', labelClassList.join(' ')) + ">";
-            dict.Html += labelHtml.left + labelHtml.above + GetFieldHtml("input", pack, fieldTagClassList, optAttrs, dict.WidthFill) + labelHtml.right + labelHtml.below;
+            dict.Html += labelHtml.left + labelHtml.above + GetFieldHtml("input", pack, dict.FieldClassList.concat(fieldTagClassList), optAttrs, dict.WidthFill) + labelHtml.right + labelHtml.below;
             dict.Html += "</label>";
         }
         
@@ -2362,7 +2362,7 @@
         
         // FIELD HTML
         var btnsHtml = GetBtnsHtml(formKeys, modsDict, true, pack);
-        dict.Html += btnsHtml.above + btnsHtml.left + btnsHtml.right + GetFieldHtml("input", pack, fieldTagClassList, dict.FieldAttrs, dict.WidthFill) + btnsHtml.below;
+        dict.Html += btnsHtml.above + btnsHtml.left + btnsHtml.right + GetFieldHtml("input", pack, dict.FieldClassList.concat(fieldTagClassList), dict.FieldAttrs, dict.WidthFill) + btnsHtml.below;
         
         return dict;
     }
@@ -2386,7 +2386,7 @@
         dict = ProcessSharedMods(supportedMods, modsDict, dict);
         
         // FIELD HTML
-        dict.Html += GetFieldHtml("input", pack, fieldTagClassList, dict.FieldAttrs, dict.WidthFill);
+        dict.Html += GetFieldHtml("input", pack, dict.FieldClassList.concat(fieldTagClassList), dict.FieldAttrs, dict.WidthFill);
         
         return dict;
     }
@@ -2434,7 +2434,7 @@
         dict.FieldAttrs.push(GetDAttr(ATTR.DATA_DTPicker, paramDict));
         
         // FIELD HTML
-        dict.Html += GetFieldHtml("input", pack, fieldTagClassList, dict.FieldAttrs, dict.WidthFill);
+        dict.Html += GetFieldHtml("input", pack, dict.FieldClassList.concat(fieldTagClassList), dict.FieldAttrs, dict.WidthFill);
         
         return dict;
     }
@@ -2493,7 +2493,7 @@
         dict.FieldAttrs.push(GetDAttr(ATTR.DATA_FormKeys, formKeys));
         
         // FIELD HTML
-        dict.Html += GetFieldHtml("button", pack, fieldTagClassList, dict.FieldAttrs, dict.WidthFill, inner);
+        dict.Html += GetFieldHtml("button", pack, dict.FieldClassList.concat(fieldTagClassList), dict.FieldAttrs, dict.WidthFill, inner);
         
         return dict;
     }
@@ -2539,7 +2539,7 @@
         
         // FIELD HTML
         var btnsHtml = GetBtnsHtml(formKeys, modsDict, allowBtns, pack);
-        dict.Html += btnsHtml.above + btnsHtml.left + btnsHtml.right + GetFieldHtml("input", pack, fieldTagClassList, dict.FieldAttrs, dict.WidthFill) + btnsHtml.below;
+        dict.Html += btnsHtml.above + btnsHtml.left + btnsHtml.right + GetFieldHtml("input", pack, dict.FieldClassList.concat(fieldTagClassList), dict.FieldAttrs, dict.WidthFill) + btnsHtml.below;
         
         return dict;
     }
