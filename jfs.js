@@ -1,6 +1,5 @@
-
-/*! JFS - v1.4.5 - 2022/01/04 */
-(function(window,undefined) {
+/*! JFS v1.4.6 | https://github.com/kenleonhard/jfs | Copyright 2018 Ken Leonhard | @licence MIT */
+(function (window, undefined) {
     "use strict";
     
     // JFS CONSTANTS
@@ -1594,8 +1593,8 @@
                     
                     html = "<form " + attrs.join(' ') + ">" + html;
                     if (pack.IncludeAutoCompleteTrigger) {
-                        html += "<button class='" + CLS.AutoCompleteTriggerButton + "' type='submit' style='display: none'></button></form>";
-                        html += "<iframe id='jfs_trigger_browser_autocomplete_iframe' name='jfs_trigger_browser_autocomplete_iframe' style='display: none' src='" + libraryDir + BLANK_FILENAME+ "'></iframe>";
+                        html += "<button class='" + CLS.AutoCompleteTriggerButton + "' type='submit' class='jfs_display_none'></button></form>";
+                        html += "<iframe id='jfs_trigger_browser_autocomplete_iframe' name='jfs_trigger_browser_autocomplete_iframe' class='jfs_display_none' src='" + libraryDir + BLANK_FILENAME+ "'></iframe>";
                     
                     } else { html += "</form>"; }
                     break;
@@ -1773,14 +1772,14 @@
                         pairClassList.push(CLS.ContainsHiddenField);
                         break;
                     
-                    case "number": // USE TEXT FIELD UNTIL SUPPORTED PROPERLY BY MORE BROWSERS
+                    case "old-browser-number":
                         fieldClassList.push(CLS.Field + "_input_number");
                         fieldDict = GetTextFieldDict(field, fieldClassList, fieldModsDict, fieldFormKeys, pack);
                         break;
                         
-                    case "date": fieldDict = GetDateFieldDict(field, fieldClassList, fieldModsDict, fieldFormKeys, pack); break;
-                    case "datetime": fieldDict = GetDateFieldDict(field, fieldClassList, fieldModsDict, fieldFormKeys, pack); break;
-                    case "datetime-local": fieldDict = GetDateFieldDict(field, fieldClassList, fieldModsDict, fieldFormKeys, pack); break;
+                    case "old-browser-date": fieldDict = GetDateFieldDict(field, fieldClassList, fieldModsDict, fieldFormKeys, pack); break;
+                    case "old-browser-datetime": fieldDict = GetDateFieldDict(field, fieldClassList, fieldModsDict, fieldFormKeys, pack); break;
+                    case "old-browser-datetime-local": fieldDict = GetDateFieldDict(field, fieldClassList, fieldModsDict, fieldFormKeys, pack); break;
                     
                     case "button": fieldDict = GetButtonFieldDict(field, fieldClassList, fieldModsDict, fieldFormKeys, pack); break;
                     case "html":
@@ -3046,8 +3045,3 @@
     window.JFS = JFS;
     
 })(window);
-
-
-
-
-
