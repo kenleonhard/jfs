@@ -1,4 +1,4 @@
-/*! JFS v1.4.6 | https://github.com/kenleonhard/jfs | Copyright 2018 Ken Leonhard | @licence MIT */
+/*! JFS v1.4.7 | https://github.com/kenleonhard/jfs | Copyright 2018 Ken Leonhard | @licence MIT */
 (function (window, undefined) {
     "use strict";
     
@@ -7,7 +7,7 @@
     var MAXIMUM_GROUP_ITEMS = 500;
     var BLANK_FILENAME = "blank.html";
     var HTML5_FIELD_TYPES = [ "search", "number", "range", "color", "tel", "url", "email", "month", "week", "time", "date", "datetime", "datetime-local" ];
-    var TEXT_FIELD_TYPES = [ "text", "password", "hidden", "search", "range", "color", "tel", "url", "email", "month", "week", "time" ];
+    var TEXT_FIELD_TYPES = [ "text", "password", "hidden", "search", "range", "color", "tel", "url", "email", "month", "week", "time", "number", "date", "datetime", "datetime-local" ];
     var SELECT_FIELD_TYPES = [ "select", "radio", "checkbox" ];
     var INTERFACE_TYPES = [ "standard", "touch" ];
     var DEFAULT_FORM_OPTION = {
@@ -182,7 +182,8 @@
             DATA_BtnFunct: "jfs_btn_function",
             DATA_BtnFunctParam: "jfs_btn_function_param",
             DATA_DTPicker: "jfs_dtpicker",
-            DATA_RepGrpBtnAddLoc: "jfs_repgrp_btn_addloc"
+            DATA_RepGrpBtnAddLoc: "jfs_repgrp_btn_addloc",
+            DATA_RequiredMessage: "jfs_required_message"
         };
         
     var ID = {
@@ -307,6 +308,24 @@
         SetTabIndexes: function(selector) {
             if (typeof selector === "undefined") { selector = ":input:not(:hidden)"; }
             jQuery(selector).each(function(ind) { jQuery(this).attr('tabindex', ind + 1); });
+        },
+
+        Html5RequiredIsValid(pack) {
+            let isValid = true;
+
+            pack.Form.find("[required]").each(function () {
+                let el = jQuery(this)[0];
+                if (!el.checkValidity()) {
+                    const attr = el.getAttribute("data-" + ATTR.DATA_RequiredMessage);
+                    if (attr !== null) el.setCustomValidity(el.getAttribute("data-" + ATTR.DATA_RequiredMessage));
+                    el.reportValidity();
+                    if (attr !== null) jQuery(this).one("change, blur", function () { jQuery(this)[0].setCustomValidity(''); });
+                    isValid = false;
+                    return false; // BREAK OUT OF .each()
+                }
+            });
+
+            return isValid;
         }
     }
     
@@ -1880,7 +1899,7 @@
                 var prepend = pack.LabelRequiredPrepend;
                 if (MOD.ReqPrepend in modsDict) {
                     try { prepend = (modsDict[MOD.ReqPrepend][KEY.param] === "true"); }
-                    catch (e) { if (window.console) { console.log("JFS Error: Error parsing lable required prepend modifier.", formKeys, e); } }
+                    catch (e) { if (window.console) { console.log("JFS Error: Error parsing label required prepend modifier.", formKeys, e); } }
                 }
 
                 if (prepend) {
@@ -2043,7 +2062,10 @@
         if (KEY.placeholder in field) { dict.FieldAttrs.push(GetAttr(ATTR.PlaceHolder, field[KEY.placeholder])); }
         if (KEY.autofocus in field) { dict.FieldAttrs.push(ATTR.AutoFocus); }
         if (KEY.autocomplete in field) { dict.FieldAttrs.push(GetAttr(ATTR.AutoComplete, (field[KEY.autocomplete] === "true" ? "on" : "off"))); }
-        if (pack.UseHtml5Required && (MOD.Req in modsDict)) { dict.FieldAttrs.push(ATTR.Required); }
+        if (pack.UseHtml5Required && (MOD.Req in modsDict)) {
+            dict.FieldAttrs.push(ATTR.Required);
+            AddHtml5RequiredMessage(dict, modsDict);
+        }
         if (KEY.field_value in field) { dict.FieldAttrs.push(GetAttr('value', field[KEY.field_value])); }
         
         // SUPPORTED MODS
@@ -2074,7 +2096,10 @@
         if ((MOD.AddClassToField in modsDict) && (KEY.param in modsDict[MOD.AddClassToField])) { fieldTagClassList.push(modsDict[MOD.AddClassToField][KEY.param]); }
         if (KEY.placeholder in field) { dict.FieldAttrs.push(GetAttr(ATTR.PlaceHolder, field[KEY.placeholder])); }
         if (KEY.autofocus in field) { dict.FieldAttrs.push(ATTR.AutoFocus); }
-        if (pack.UseHtml5Required && (MOD.Req in modsDict)) { dict.FieldAttrs.push(ATTR.Required); }
+        if (pack.UseHtml5Required && (MOD.Req in modsDict)) {
+            dict.FieldAttrs.push(ATTR.Required);
+            AddHtml5RequiredMessage(dict, modsDict);
+        }
         if (KEY.field_value in field) { val = field[KEY.field_value]; }
         
         // SUPPORTED MODS
@@ -2104,7 +2129,10 @@
         if (KEY.disabled in field && (field[KEY.disabled] === "true")) { dict.FieldAttrs.push(ATTR.Disabled); }
         if ((MOD.AddClassToField in modsDict) && (KEY.param in modsDict[MOD.AddClassToField])) { fieldTagClassList.push(modsDict[MOD.AddClassToField][KEY.param]); }
         if (KEY.autofocus in field) { dict.FieldAttrs.push(ATTR.AutoFocus); }
-        if (pack.UseHtml5Required && (MOD.Req in modsDict)) { dict.FieldAttrs.push(ATTR.Required); }
+        if (pack.UseHtml5Required && (MOD.Req in modsDict)) {
+            dict.FieldAttrs.push(ATTR.Required);
+            AddHtml5RequiredMessage(dict, modsDict);
+        }
         if (KEY.field_value in field) { val = field[KEY.field_value]; }
         
         // SUPPORTED MODS
@@ -2223,7 +2251,10 @@
             if (KEY.disabled in optDict) { optDisabled = (optDict[KEY.disabled] === "true"); }
             if (optDisabled) { optAttrs.push(ATTR.Disabled); }
             
-            if (pack.UseHtml5Required && (MOD.Req in modsDict)) { optAttrs.push(ATTR.Required); }
+            if (pack.UseHtml5Required && (MOD.Req in modsDict)) {
+                dict.FieldAttrs.push(ATTR.Required);
+                AddHtml5RequiredMessage(dict, modsDict);
+            }
             if (optDict[KEY.value] === val) { optAttrs.push(ATTR.Checked); }
             
             // FINAL HTML
@@ -2323,7 +2354,10 @@
             if (KEY.disabled in optDict) { optDisabled = (optDict[KEY.disabled] === "true"); }
             if (optDisabled) { optAttrs.push(ATTR.Disabled); }
             
-            if (pack.UseHtml5Required && (MOD.Req in optModsDict)) { optAttrs.push(ATTR.Required); }
+            if (pack.UseHtml5Required && (MOD.Req in modsDict)) {
+                dict.FieldAttrs.push(ATTR.Required);
+                AddHtml5RequiredMessage(dict, modsDict);
+            }
             if (val.indexOf(optDict[KEY.value]) !== -1) { optAttrs.push(ATTR.Checked); }
             
             // FINAL HTML
@@ -2351,7 +2385,10 @@
         if ((MOD.AddClassToField in modsDict) && (KEY.param in modsDict[MOD.AddClassToField])) { fieldTagClassList.push(modsDict[MOD.AddClassToField][KEY.param]); }
         if (KEY.autofocus in field) { dict.FieldAttrs.push(ATTR.AutoFocus); }
         if (KEY.autocomplete in field) { dict.FieldAttrs.push(GetAttr(ATTR.AutoComplete, (field[KEY.autocomplete] === "true" ? "on" : "off"))); }
-        if (pack.UseHtml5Required && (MOD.Req in modsDict)) { dict.FieldAttrs.push(ATTR.Required); }
+        if (pack.UseHtml5Required && (MOD.Req in modsDict)) {
+            dict.FieldAttrs.push(ATTR.Required);
+            AddHtml5RequiredMessage(dict, modsDict);
+        }
         if (pack.UseLabelsAsFieldTitles && (KEY.label in field) && (field[KEY.label] !== "")) { dict.FieldAttrs.push(GetAttr(ATTR.Title, field[KEY.label])); }
         if (KEY.field_value in field) { dict.FieldAttrs.push(GetAttr('value', field[KEY.field_value])); }
         
@@ -2406,7 +2443,10 @@
         if ((MOD.AddClassToField in modsDict) && (KEY.param in modsDict[MOD.AddClassToField])) { fieldTagClassList.push(modsDict[MOD.AddClassToField][KEY.param]); }
         if (KEY.placeholder in field) { dict.FieldAttrs.push(GetAttr(ATTR.PlaceHolder, field[KEY.placeholder])); }
         if (KEY.autofocus in field) { dict.FieldAttrs.push(ATTR.AutoFocus); }
-        if (pack.UseHtml5Required && (MOD.Req in modsDict)) { dict.FieldAttrs.push(ATTR.Required); }
+        if (pack.UseHtml5Required && (MOD.Req in modsDict)) {
+            dict.FieldAttrs.push(ATTR.Required);
+            AddHtml5RequiredMessage(dict, modsDict);
+        }
         if (pack.UseLabelsAsFieldTitles && (KEY.label in field) && (field[KEY.label] !== "")) { dict.FieldAttrs.push(GetAttr(ATTR.Title, field[KEY.label])); }
         if (KEY.field_value in field) { dict.FieldAttrs.push(GetAttr('value', field[KEY.field_value])); }
         
@@ -2514,7 +2554,10 @@
         if (KEY.placeholder in field) { dict.FieldAttrs.push(GetAttr(ATTR.PlaceHolder, field[KEY.placeholder])); }
         if (KEY.autofocus in field) { dict.FieldAttrs.push(ATTR.AutoFocus); }
         if (KEY.autocomplete in field) { dict.FieldAttrs.push(GetAttr(ATTR.AutoComplete, (field[KEY.autocomplete] === "true" ? "on" : "off"))); }
-        if (pack.UseHtml5Required && (MOD.Req in modsDict)) { dict.FieldAttrs.push(ATTR.Required); }
+        if (pack.UseHtml5Required && (MOD.Req in modsDict)) {
+            dict.FieldAttrs.push(ATTR.Required);
+            AddHtml5RequiredMessage(dict, modsDict);
+        }
         if (pack.UseLabelsAsFieldTitles && (KEY.label in field) && (field[KEY.label] !== "")) { dict.FieldAttrs.push(GetAttr(ATTR.Title, field[KEY.label])); }
         if (KEY.field_value in field) { dict.FieldAttrs.push(GetAttr('value', field[KEY.field_value])); }
         
@@ -2708,6 +2751,13 @@
         }
         return btnsHtml;
     }
+
+    // HTML5 REQUIRED MESSAGE
+    function AddHtml5RequiredMessage(dict, modsDict) {
+        if ((modsDict[MOD.Req][KEY.param] !== undefined) && (modsDict[MOD.Req][KEY.param] !== "")) {
+            dict.FieldAttrs.push(GetDAttr(ATTR.DATA_RequiredMessage, modsDict[MOD.Req][KEY.param]));
+        }
+    }
     
     // FIELD WIDTH WRAP
     function WrapWithWidthSpan(html) {
@@ -2862,7 +2912,7 @@
     
     // DATA ATTR
     function GetDAttr(key, obj) {
-        var string = (typeof obj === 'string' ? obj : JSON.stringify(obj));
+        var string = (typeof obj === 'string' ? AttrSafe(obj) : JSON.stringify(obj));
         return "data-" + key + "='" + string + "'";
     }
     

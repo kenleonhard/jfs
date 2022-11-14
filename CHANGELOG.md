@@ -1,6 +1,12 @@
 JFS Changelog
 =============
 
+v1.4.7 - 2022/11/14
+---------------
+1. Added: Support HTML5 Required Custom Messages (Augments existing UseHtml5Required.)
+2. Fixed: Change listeners for number, date, datetime, and datetime-local field types.
+3. Fixed: Error message typo.
+
 v1.4.6 - 2022/11/11
 ---------------
 1. Changed: Switch to using HTML5 fields by default for date, datetime, datetime-local and number types.
